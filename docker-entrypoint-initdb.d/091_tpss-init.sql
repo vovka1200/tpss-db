@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict uF5Tzb7ACmtGMU8fH3iBZfZTrDgV5Gtpy8u3Oabsgkq6aaYe3qQrPFOtiq6fFYb
+\restrict 3c359kfOGzb3NZc0I3E8T7oA2n4Y3CRnMbhEY1SBGfqhVFN3AID8F19l7iamNHC
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -28,9 +28,9 @@ CREATE DATABASE tpss WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVIDER
 
 ALTER DATABASE tpss OWNER TO postgres;
 
-\unrestrict uF5Tzb7ACmtGMU8fH3iBZfZTrDgV5Gtpy8u3Oabsgkq6aaYe3qQrPFOtiq6fFYb
+\unrestrict 3c359kfOGzb3NZc0I3E8T7oA2n4Y3CRnMbhEY1SBGfqhVFN3AID8F19l7iamNHC
 \connect tpss
-\restrict uF5Tzb7ACmtGMU8fH3iBZfZTrDgV5Gtpy8u3Oabsgkq6aaYe3qQrPFOtiq6fFYb
+\restrict 3c359kfOGzb3NZc0I3E8T7oA2n4Y3CRnMbhEY1SBGfqhVFN3AID8F19l7iamNHC
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -543,12 +543,28 @@ ALTER TABLE crm.phones OWNER TO postgres;
 CREATE TABLE crm.tasks (
     parent_id uuid,
     author_id uuid NOT NULL,
-    description text NOT NULL
+    description text NOT NULL,
+    assignee_id uuid,
+    group_id uuid
 )
 INHERITS (public.entities);
 
 
 ALTER TABLE crm.tasks OWNER TO postgres;
+
+--
+-- Name: COLUMN tasks.assignee_id; Type: COMMENT; Schema: crm; Owner: postgres
+--
+
+COMMENT ON COLUMN crm.tasks.assignee_id IS 'Исполнитель';
+
+
+--
+-- Name: COLUMN tasks.group_id; Type: COMMENT; Schema: crm; Owner: postgres
+--
+
+COMMENT ON COLUMN crm.tasks.group_id IS 'Группа исполнителей';
+
 
 --
 -- Name: params; Type: TABLE; Schema: customs; Owner: postgres
@@ -1000,7 +1016,7 @@ COPY crm.phones (created, client_id, number) FROM stdin;
 -- Data for Name: tasks; Type: TABLE DATA; Schema: crm; Owner: postgres
 --
 
-COPY crm.tasks (id, created, updated, archived, name, parent_id, author_id, description) FROM stdin;
+COPY crm.tasks (id, created, updated, archived, name, parent_id, author_id, description, assignee_id, group_id) FROM stdin;
 \.
 
 
@@ -1312,10 +1328,24 @@ CREATE INDEX fki_phones_client_fkey ON crm.phones USING btree (client_id);
 
 
 --
+-- Name: fki_tasks_assignee_fkey; Type: INDEX; Schema: crm; Owner: postgres
+--
+
+CREATE INDEX fki_tasks_assignee_fkey ON crm.tasks USING btree (assignee_id);
+
+
+--
 -- Name: fki_tasks_author_fkey; Type: INDEX; Schema: crm; Owner: postgres
 --
 
 CREATE INDEX fki_tasks_author_fkey ON crm.tasks USING btree (author_id);
+
+
+--
+-- Name: fki_tasks_group_fkey; Type: INDEX; Schema: crm; Owner: postgres
+--
+
+CREATE INDEX fki_tasks_group_fkey ON crm.tasks USING btree (group_id);
 
 
 --
@@ -1417,11 +1447,27 @@ ALTER TABLE ONLY crm.phones
 
 
 --
+-- Name: tasks tasks_assignee_fkey; Type: FK CONSTRAINT; Schema: crm; Owner: postgres
+--
+
+ALTER TABLE ONLY crm.tasks
+    ADD CONSTRAINT tasks_assignee_fkey FOREIGN KEY (assignee_id) REFERENCES access.users(id);
+
+
+--
 -- Name: tasks tasks_author_fkey; Type: FK CONSTRAINT; Schema: crm; Owner: postgres
 --
 
 ALTER TABLE ONLY crm.tasks
     ADD CONSTRAINT tasks_author_fkey FOREIGN KEY (author_id) REFERENCES access.users(id);
+
+
+--
+-- Name: tasks tasks_group_fkey; Type: FK CONSTRAINT; Schema: crm; Owner: postgres
+--
+
+ALTER TABLE ONLY crm.tasks
+    ADD CONSTRAINT tasks_group_fkey FOREIGN KEY (group_id) REFERENCES access.groups(id);
 
 
 --
@@ -1672,5 +1718,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA files GRANT ALL ON TABLES T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict uF5Tzb7ACmtGMU8fH3iBZfZTrDgV5Gtpy8u3Oabsgkq6aaYe3qQrPFOtiq6fFYb
+\unrestrict 3c359kfOGzb3NZc0I3E8T7oA2n4Y3CRnMbhEY1SBGfqhVFN3AID8F19l7iamNHC
 
