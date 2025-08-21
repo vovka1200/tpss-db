@@ -1,0 +1,21 @@
+networks:
+  tpss:
+    name: tpss
+    driver: bridge
+
+services:
+  tpss-postgres:
+    image: tpss-postgres
+    container_name: tpss-postgres
+    shm_size: 2Gb
+    networks:
+      - tpss
+    ports:
+      - 5432:5432
+    volumes:
+      - tpss-postgres-volume:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: 123
+
+volumes:
+  tpss-postgres-volume:
