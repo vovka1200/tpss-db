@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 3c359kfOGzb3NZc0I3E8T7oA2n4Y3CRnMbhEY1SBGfqhVFN3AID8F19l7iamNHC
+\restrict uVIA9tc4e18hX7quWb2dSWdtyDO2Rc70NceoobAK6nxf0zKdg7roPxFlor6cupu
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -28,9 +28,9 @@ CREATE DATABASE tpss WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE_PROVIDER
 
 ALTER DATABASE tpss OWNER TO postgres;
 
-\unrestrict 3c359kfOGzb3NZc0I3E8T7oA2n4Y3CRnMbhEY1SBGfqhVFN3AID8F19l7iamNHC
+\unrestrict uVIA9tc4e18hX7quWb2dSWdtyDO2Rc70NceoobAK6nxf0zKdg7roPxFlor6cupu
 \connect tpss
-\restrict 3c359kfOGzb3NZc0I3E8T7oA2n4Y3CRnMbhEY1SBGfqhVFN3AID8F19l7iamNHC
+\restrict uVIA9tc4e18hX7quWb2dSWdtyDO2Rc70NceoobAK6nxf0zKdg7roPxFlor6cupu
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -502,15 +502,52 @@ CREATE VIEW access.matrix AS
 ALTER VIEW access.matrix OWNER TO postgres;
 
 --
+-- Name: clients_users; Type: TABLE; Schema: crm; Owner: postgres
+--
+
+CREATE TABLE crm.clients_users (
+    object_id uuid NOT NULL,
+    user_id uuid NOT NULL
+);
+
+
+ALTER TABLE crm.clients_users OWNER TO postgres;
+
+--
+-- Name: TABLE clients_users; Type: COMMENT; Schema: crm; Owner: postgres
+--
+
+COMMENT ON TABLE crm.clients_users IS 'Пользователи клиента';
+
+
+--
 -- Name: companies; Type: TABLE; Schema: crm; Owner: postgres
 --
 
 CREATE TABLE crm.companies (
 )
-INHERITS (public.entities);
+INHERITS (crm.clients);
 
 
 ALTER TABLE crm.companies OWNER TO postgres;
+
+--
+-- Name: companies_users; Type: TABLE; Schema: crm; Owner: postgres
+--
+
+CREATE TABLE crm.companies_users (
+)
+INHERITS (crm.clients_users);
+
+
+ALTER TABLE crm.companies_users OWNER TO postgres;
+
+--
+-- Name: TABLE companies_users; Type: COMMENT; Schema: crm; Owner: postgres
+--
+
+COMMENT ON TABLE crm.companies_users IS 'Пользователи компаний';
+
 
 --
 -- Name: contracts; Type: TABLE; Schema: crm; Owner: postgres
@@ -989,10 +1026,26 @@ COPY crm.clients (id, created, updated, archived, name) FROM stdin;
 
 
 --
+-- Data for Name: clients_users; Type: TABLE DATA; Schema: crm; Owner: postgres
+--
+
+COPY crm.clients_users (object_id, user_id) FROM stdin;
+\.
+
+
+--
 -- Data for Name: companies; Type: TABLE DATA; Schema: crm; Owner: postgres
 --
 
 COPY crm.companies (id, created, updated, archived, name) FROM stdin;
+\.
+
+
+--
+-- Data for Name: companies_users; Type: TABLE DATA; Schema: crm; Owner: postgres
+--
+
+COPY crm.companies_users (object_id, user_id) FROM stdin;
 \.
 
 
@@ -1177,11 +1230,27 @@ ALTER TABLE ONLY crm.clients
 
 
 --
+-- Name: clients_users clients_users_uniq; Type: CONSTRAINT; Schema: crm; Owner: postgres
+--
+
+ALTER TABLE ONLY crm.clients_users
+    ADD CONSTRAINT clients_users_uniq UNIQUE (object_id, user_id);
+
+
+--
 -- Name: companies companies_pkey; Type: CONSTRAINT; Schema: crm; Owner: postgres
 --
 
 ALTER TABLE ONLY crm.companies
     ADD CONSTRAINT companies_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: companies_users companies_users_uniq; Type: CONSTRAINT; Schema: crm; Owner: postgres
+--
+
+ALTER TABLE ONLY crm.companies_users
+    ADD CONSTRAINT companies_users_uniq UNIQUE (object_id, user_id);
 
 
 --
@@ -1321,6 +1390,34 @@ CREATE UNIQUE INDEX sessions_token_idx ON access.sessions USING btree (token) WI
 
 
 --
+-- Name: fki_clients_client_fkey; Type: INDEX; Schema: crm; Owner: postgres
+--
+
+CREATE INDEX fki_clients_client_fkey ON crm.clients_users USING btree (object_id);
+
+
+--
+-- Name: fki_clients_user_fkey; Type: INDEX; Schema: crm; Owner: postgres
+--
+
+CREATE INDEX fki_clients_user_fkey ON crm.clients_users USING btree (user_id);
+
+
+--
+-- Name: fki_companies_client_fkey; Type: INDEX; Schema: crm; Owner: postgres
+--
+
+CREATE INDEX fki_companies_client_fkey ON crm.companies_users USING btree (object_id);
+
+
+--
+-- Name: fki_companies_user_fkey; Type: INDEX; Schema: crm; Owner: postgres
+--
+
+CREATE INDEX fki_companies_user_fkey ON crm.companies_users USING btree (user_id);
+
+
+--
 -- Name: fki_phones_client_fkey; Type: INDEX; Schema: crm; Owner: postgres
 --
 
@@ -1436,6 +1533,38 @@ ALTER TABLE ONLY access.sessions
 
 ALTER TABLE ONLY access.users
     ADD CONSTRAINT users_avatar_fkey FOREIGN KEY (avatar_id) REFERENCES files.avatars(id);
+
+
+--
+-- Name: clients_users clients_object_fkey; Type: FK CONSTRAINT; Schema: crm; Owner: postgres
+--
+
+ALTER TABLE ONLY crm.clients_users
+    ADD CONSTRAINT clients_object_fkey FOREIGN KEY (object_id) REFERENCES crm.clients(id);
+
+
+--
+-- Name: clients_users clients_user_fkey; Type: FK CONSTRAINT; Schema: crm; Owner: postgres
+--
+
+ALTER TABLE ONLY crm.clients_users
+    ADD CONSTRAINT clients_user_fkey FOREIGN KEY (user_id) REFERENCES access.users(id);
+
+
+--
+-- Name: companies_users companies_object_fkey; Type: FK CONSTRAINT; Schema: crm; Owner: postgres
+--
+
+ALTER TABLE ONLY crm.companies_users
+    ADD CONSTRAINT companies_object_fkey FOREIGN KEY (object_id) REFERENCES crm.companies(id);
+
+
+--
+-- Name: companies_users companies_user_fkey; Type: FK CONSTRAINT; Schema: crm; Owner: postgres
+--
+
+ALTER TABLE ONLY crm.companies_users
+    ADD CONSTRAINT companies_user_fkey FOREIGN KEY (user_id) REFERENCES access.users(id);
 
 
 --
@@ -1610,10 +1739,24 @@ GRANT SELECT ON TABLE access.matrix TO tpss;
 
 
 --
+-- Name: TABLE clients_users; Type: ACL; Schema: crm; Owner: postgres
+--
+
+GRANT SELECT,INSERT,UPDATE ON TABLE crm.clients_users TO tpss;
+
+
+--
 -- Name: TABLE companies; Type: ACL; Schema: crm; Owner: postgres
 --
 
 GRANT ALL ON TABLE crm.companies TO tpss;
+
+
+--
+-- Name: TABLE companies_users; Type: ACL; Schema: crm; Owner: postgres
+--
+
+GRANT SELECT,INSERT,UPDATE ON TABLE crm.companies_users TO tpss;
 
 
 --
@@ -1718,5 +1861,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA files GRANT ALL ON TABLES T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 3c359kfOGzb3NZc0I3E8T7oA2n4Y3CRnMbhEY1SBGfqhVFN3AID8F19l7iamNHC
+\unrestrict uVIA9tc4e18hX7quWb2dSWdtyDO2Rc70NceoobAK6nxf0zKdg7roPxFlor6cupu
 
